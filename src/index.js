@@ -10,6 +10,18 @@ dotenv.config({
 
 
 connectDB()
+.then(()=>{
+    app.on("err", (error)=>{
+        console.log("Error in connecting to the server", error)
+        throw error;
+    });
+    app.listen(process.env.PORT || 8000, () => {
+        console.log(`App is running on port ${process.env.PORT}`)
+    })
+})
+.catch((err)=>{
+    console.log("Error in connecting to DB", err)
+})
 
 /* the first approch to connect the database to main
 import express from "express";
