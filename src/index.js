@@ -1,6 +1,6 @@
 import dotenv from "dotenv"
 import connectDB from "./db/database.js";
-;
+
 // two things to remember 1: always remember to wrap things in try catch block and 2: that DB is in another country so we have to use async await
 
 
