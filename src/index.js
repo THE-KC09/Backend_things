@@ -1,6 +1,6 @@
 import dotenv from "dotenv"
 import connectDB from "./db/database.js";
-
+import express from "express"  // suspence??
 // two things to remember 1: always remember to wrap things in try catch block and 2: that DB is in another country so we have to use async await
 
 
@@ -8,6 +8,7 @@ dotenv.config({
     path: "./env"
 })
 
+app = express()  // suspence??
 
 connectDB()
 .then(()=>{
