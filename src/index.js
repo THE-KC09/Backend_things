@@ -8,11 +8,11 @@ dotenv.config({
     path: "./env"
 })
 
-app = express()  // suspence??
+const app = express()  // suspence??
 
 connectDB()
 .then(()=>{
-    app.on("err", (error)=>{
+    app.on("err", (error)=>{  // it's only register error listener (only for future error if happen)
         console.log("Error in connecting to the server", error)
         throw error;
     });

@@ -13,4 +13,13 @@ app.use(urlencoded({ extended: true })); // to get data in form of url encoded f
 app.use(express.static('public'))
 app.use(cookieParser())
 
+
+// import router:
+
+import userRouter from './routes/user.routes.js';
+
+// declaration of routes: (we do this via middleware using .use hook)
+app.use("/api/v2/users", userRouter)
+
+
 export { app };
