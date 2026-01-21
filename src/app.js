@@ -9,7 +9,7 @@ app.use(cors({ // like proxy server
     credentials: true
 }))
 app.use(express.json({ limit: '10kb' })); // to parse json data with some limit
-app.use(urlencoded({ extended: true })); // to get data in form of url encoded format(some data get from urls too)
+app.use(express.urlencoded({ extended: true })); // to get data in form of url encoded format(some data get from urls too)
 app.use(express.static('public'))
 app.use(cookieParser())
 
