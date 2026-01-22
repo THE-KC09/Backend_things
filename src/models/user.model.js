@@ -53,7 +53,7 @@ userSchema.pre("save", async function (next){  // encrypting the password when p
     if(!this.isModified("password")) return next()
 
     this.password = await bcrypt.hash(this.password, 10)
-    next()
+    next
 })
 
 userSchema.methods.isPasswordCorrect = async function (password){  // check either password is correct or not
