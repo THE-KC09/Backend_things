@@ -1,8 +1,8 @@
 // what it will do is to check that is ther user is there or not !
 
-import { User } from "../models/user.model";
-import { apiErrors } from "../utils/apiErrors";
-import { asyncHandler } from "../utils/asyncHandler";
+import { User } from "../models/user.model.js";
+import { apiErrors } from "../utils/apiErrors.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken"
 
 
@@ -23,8 +23,9 @@ export const verifyJWT = asyncHandler(async (req, res, next)=>{
         }
 
         req.userinfo = userinfo;
-        next
+        next()
     } catch (error) {
+        console.log(error.message)
         throw new apiErrors(401, error?.message || "invalid access token!")
     }
 

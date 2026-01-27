@@ -4,18 +4,19 @@ import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.service.js"
 import { apiResponse } from "../utils/apiResponse.js"
 
-const generateAccessandRefreshtoekn = async(userId)=> {
+const generateAccessandRefreshtoken = async (userId) => {
     try {
-        const user = User.findById(userId)
-        const accesstoken = await user.generateAccessToken()
-        const refreshtoken = await user.generateRefreshToken()
+        const user = await User.findById(userId)
+        console.log("typeof user.generateAccessToken:", typeof user.generateAccessToken)
+        console.log("typeof user.generateRefreshToken:", typeof user.generateRefreshToken)
+        const accesstoken = user.generateAccessToken()
+        const refreshtoken = user.generateRefreshToken() 
+        
+        user.refreshToken = refreshtoken
+        await user.save({ validateBeforeSave: false })
+        
 
-        user.refreshtoken = refreshtoken
-        await user.save({validateBeforeSave: false})
-
-        return {
-            accesstoken, refreshtoken
-        }
+        return {accesstoken, refreshtoken}
     } catch (error) {
         throw new apiErrors(500, "Something went wrong while genrating tokens!")
     }
@@ -96,7 +97,7 @@ const loginUser = asyncHandler(async (req, res)=> {
 
     const {username, email, password} = req.body
 
-    if (!username || !email) {
+    if (!(username || email)) {
         throw new apiErrors(400, "either email or username is required with password!!")
     }
 
@@ -113,8 +114,8 @@ const loginUser = asyncHandler(async (req, res)=> {
     if (!isPasswordCorrect) {
         throw new apiErrors(401, "invalid password")
     }
-
-    const {refreshtoken, accesstoken} = generateAccessandRefreshtoekn(user._id)
+    console.log(user._id)
+    const {refreshtoken, accesstoken} = await generateAccessandRefreshtoken(user._id)
 
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
     // cookies 
@@ -128,11 +129,13 @@ const loginUser = asyncHandler(async (req, res)=> {
     .cookie("accessToken", accesstoken, option)
     .cookie("refreshToken", refreshtoken, option)
     .json(
-        200,
-        "User has successfully logged In",
-        {
-            user: loggedInUser, refreshtoken, accesstoken
-        }
+        new apiResponse(
+            200, 
+            {
+                user: loggedInUser, accesstoken, refreshtoken
+            },
+            "User logged in successfully"
+        )
     )
 })
 
@@ -162,8 +165,6 @@ const logoutUser = asyncHandler(async (req, res)=> {
     
 
 })
-
-
 
 export {
     registerUser,
