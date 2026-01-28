@@ -3,6 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.service.js"
 import { apiResponse } from "../utils/apiResponse.js"
+import jwt from "jsonwebtoken"
 
 const generateAccessandRefreshtoken = async (userId) => {
     try {
@@ -163,8 +164,57 @@ const logoutUser = asyncHandler(async (req, res)=> {
 
 })
 
+const refreshAccessToken = asyncHandler(async (req, res)=>{
+    // first check that our access token is expired or not
+    // if yes then by hiting a end point in which we compare the refresh token of user to DB's refresh token if it matches then we generate a new access token and send to user and a new refresh token too.
+
+    const inComingToken = req.cookies.refreshToken || req.body.refreshToken
+    if (!inComingToken) {
+        throw new apiErrors(401, "unauthorized token")
+    }
+    try {
+        
+            const decodedToken = jwt.verify(inComingToken, REFRESH_TOKEN_SECRET)
+        
+            const userInfo = await User.findById(decodedToken?._id)
+            if (!userInfo) {
+                throw new apiErrors(401, "invalid refresh token!")
+            }
+        
+            if (inComingToken !== userInfo.refreshToken) {
+                throw new apiErrors(401, "Refresh token is Expired")
+            }
+        
+            const option = {
+                httpOnly: true,
+                secure: true
+            }
+        
+            const {newRefreshToken, accesstoken} = await generateAccessandRefreshtoken(userInfo._id)
+        
+            return res
+            .status(200)
+            .cookie("accessToken", accesstoken, option)
+            .cookie("refreshToken", newRefreshToken, option)
+            .json(
+                new apiResponse(
+                    200,
+                    {accesstoken, refreshToken: newRefreshToken },
+                    "New Refresh token is generated"
+                )
+            )
+        
+        
+    } catch (error) {
+        throw new apiErrors(401, error?.message)
+    }
+
+
+})
+
 export {
     registerUser,
     loginUser,
-    logoutUser
+    logoutUser,
+    refreshAccessToken
 }
