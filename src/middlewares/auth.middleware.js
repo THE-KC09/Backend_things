@@ -9,23 +9,20 @@ import jwt from "jsonwebtoken"
 export const verifyJWT = asyncHandler(async (req, res, next)=>{
     try {
         const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
-    
         if (!token) {
-            throw new apiErrors(401, "Unathorized request")
+            throw new apiErrors(401, "unauthorized token!!")
         }
     
         const decodedToken =  jwt.verify(token, process.env.ACCESS_SECRET_TOKEN)
 
         const userinfo = await User.findById(decodedToken?._id).select("-password -refreshToken")
-
         if (!userinfo) {
             throw new apiErrors(401, "invalid access token!")
         }
 
-        req.userinfo = userinfo;
+        req.user = userinfo;
         next()
     } catch (error) {
-        console.log(error.message)
         throw new apiErrors(401, error?.message || "invalid access token!")
     }
 

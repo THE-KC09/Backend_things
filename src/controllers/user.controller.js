@@ -7,8 +7,6 @@ import { apiResponse } from "../utils/apiResponse.js"
 const generateAccessandRefreshtoken = async (userId) => {
     try {
         const user = await User.findById(userId)
-        console.log("typeof user.generateAccessToken:", typeof user.generateAccessToken)
-        console.log("typeof user.generateRefreshToken:", typeof user.generateRefreshToken)
         const accesstoken = user.generateAccessToken()
         const refreshtoken = user.generateRefreshToken() 
         
@@ -114,7 +112,7 @@ const loginUser = asyncHandler(async (req, res)=> {
     if (!isPasswordCorrect) {
         throw new apiErrors(401, "invalid password")
     }
-    console.log(user._id)
+    // console.log(user._id)
     const {refreshtoken, accesstoken} = await generateAccessandRefreshtoken(user._id)
 
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
@@ -141,7 +139,7 @@ const loginUser = asyncHandler(async (req, res)=> {
 
 const logoutUser = asyncHandler(async (req, res)=> {
     await User.findByIdAndUpdate(
-        req.userinfo._id,
+        req.user._id,
         {
             $set: {
                 refreshToken: undefined
@@ -156,11 +154,10 @@ const logoutUser = asyncHandler(async (req, res)=> {
         httpOnly: true,
         secure: true
     }
-
     return res
     .status(200)
-    .clearcookie("accessToken", option)
-    .clearcookie("refreshToken", option)
+    .clearCookie("accessToken", option)
+    .clearCookie("refreshToken", option)
     .json(200, {}, "User successfully logged out")
     
 
