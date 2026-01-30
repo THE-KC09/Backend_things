@@ -174,24 +174,20 @@ const refreshAccessToken = asyncHandler(async (req, res)=>{
     }
     try {
         
-            const decodedToken = jwt.verify(inComingToken, REFRESH_TOKEN_SECRET)
-        
+            const decodedToken = jwt.verify(inComingToken, process.env.REFRESH_TOKEN_SECRET)
             const userInfo = await User.findById(decodedToken?._id)
             if (!userInfo) {
                 throw new apiErrors(401, "invalid refresh token!")
             }
-        
             if (inComingToken !== userInfo.refreshToken) {
                 throw new apiErrors(401, "Refresh token is Expired")
             }
-        
             const option = {
                 httpOnly: true,
                 secure: true
             }
         
             const {newRefreshToken, accesstoken} = await generateAccessandRefreshtoken(userInfo._id)
-        
             return res
             .status(200)
             .cookie("accessToken", accesstoken, option)
@@ -199,8 +195,8 @@ const refreshAccessToken = asyncHandler(async (req, res)=>{
             .json(
                 new apiResponse(
                     200,
-                    {accesstoken, refreshToken: newRefreshToken },
-                    "New Refresh token is generated"
+                    "New Refresh token is generated",
+                    {accesstoken, refreshToken: newRefreshToken}
                 )
             )
         
@@ -212,9 +208,37 @@ const refreshAccessToken = asyncHandler(async (req, res)=>{
 
 })
 
+const changeCurrentPassword = asyncHandler(async(req, res)=> {
+    // extract new pass that send with req 
+    // then compare it to the old one if it not same then change it and hash with the bcrypt then save it
+    const {oldPass, newPass} = req.body
+    const userInfo = await User.findById(req?.user._id)
+    const validationPass = await userInfo.isPasswordCorrect(oldPass)
+    if (!validationPass) {
+        throw new apiErrors(400, "Wrong Password")
+    }
+
+    userInfo.password = newPass
+    await userInfo.save({validateBeforeSave: true})
+
+    return res
+    .status(200)
+    .json(new apiResponse(200, {}, "Password Changed Sucessfully"))
+
+    }
+)
+
+const currentUser = asyncHandler(async(req, res)=> {
+    return res
+    .status(200)
+    .json(new apiResponse(200, "User fetched Sucessfully",  req.user))
+})
+
 export {
     registerUser,
     loginUser,
     logoutUser,
-    refreshAccessToken
+    refreshAccessToken,
+    changeCurrentPassword,
+    currentUser
 }
