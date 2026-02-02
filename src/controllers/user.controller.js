@@ -41,12 +41,10 @@ const registerUser = asyncHandler(async (req, res)=>{
 
     // handling files : 
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    // console.log(req.files.coverImage)
 
 
     let coverImageLocalPath;
     if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
-        console.log(coverImageLocalPath)
         coverImageLocalPath = req.files.coverImage[0].path
     }
 
@@ -228,17 +226,102 @@ const changeCurrentPassword = asyncHandler(async(req, res)=> {
     }
 )
 
+const updateUserProfile = asyncHandler(async(req, res)=>{
+    const {fullName, email} = req.body
+    if (!fullName && !email) {
+        throw new apiErrors(400, "this fields are required")
+    }
+
+    const userInfo = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: {
+                fullName,
+                email
+            }
+        }
+    ).select("-password")
+
+    return res
+    .status(200)
+    .json(200,
+        new apiResponse(200, userInfo, "Profile updated successfully")
+    )
+})
+
 const currentUser = asyncHandler(async(req, res)=> {
+    console.log(req.user)
     return res
     .status(200)
     .json(new apiResponse(200, "User fetched Sucessfully",  req.user))
 })
 
+const updateAvatar = asyncHandler(async(req, res)=> {
+    // handling and updating avatar with multer
+    const newAvatarPath = req.file?.path;
+    console.log(newAvatarPath)
+    if (!newAvatarPath) {
+        throw new apiErrors(400, "Avatar is required")
+    }
+
+    const newAvatar = await uploadOnCloudinary(newAvatarPath)
+    if (!newAvatar.url) {
+        throw new apiErrors(500, "Something went wrong while uploading avatar")
+    }
+    
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: {avatar: newAvatar.url}
+        },
+        {new: true}
+    ).select("-password")
+
+    return res
+    .status(200)
+    .json(
+        new apiResponse(200, userInfo, "Avatar has been updated successfully")
+    )
+
+})
+
+const updateCoverImage = asyncHandler(async(req, res)=> {
+    // handling and updating avatar with multer
+    const newCoverImagerPath = req.file?.path;
+    console.log(newCoverImagerPath)
+    if (!newCoverImagerPath) {
+        throw new apiErrors(400, "CoverImage is required")
+    }
+
+    const newCoverImage = await uploadOnCloudinary(newCoverImagerPath)
+    if (!newCoverImage.url) {
+        throw new apiErrors(500, "Something went wrong while uploading Cover Image")
+    }
+    
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: {coverImage: newCoverImage.url}
+        },
+        {new: true}
+    ).select("-password")
+
+    return res
+    .status(200)
+    .json(
+        new apiResponse(200, userInfo, "Cover Image has been updated successfully")
+    )
+
+
+})
 export {
     registerUser,
     loginUser,
     logoutUser,
     refreshAccessToken,
     changeCurrentPassword,
-    currentUser
+    currentUser,
+    updateUserProfile,
+    updateAvatar,
+    updateCoverImage
 }
