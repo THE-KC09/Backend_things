@@ -314,6 +314,72 @@ const updateCoverImage = asyncHandler(async(req, res)=> {
 
 
 })
+
+const getUserChannelProfile = asyncHandler(async(req, res)=> {
+    const {username} = req.params
+    if (!username?.trim()) {
+        throw new apiErrors(400, "username is required")
+    }
+
+    const channel = await User.aggregate([
+        {
+            $match: {username: username.toLowerCase()}
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localfield: "_id",
+                foreignField: "channel",
+                as: "subscribers"
+            }
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo"
+            }
+        },
+        {
+            $addFields: {
+                subscriberCount: {
+                    $size: "$subscribers"
+                },
+                channelSubscribedToCount: {
+                    $size: "$subscribedTo"
+                },
+                isSubscribed: {
+                    $cond: {
+                        if: {$in: [req.user?._id, "$subscribers.subscriber"]},
+                        then: true,
+                        else: false
+                    }
+                },
+            },
+            $project: {
+                username: 1,
+                fullName: 1,
+                avatar: 1,
+                coverImage: 1,
+                isSubscribed: 1,
+                subscriberCount: 1,
+                channelSubscribedToCount: 1
+            }
+        }
+    ])
+    if (!channel?.length) {
+        throw new apiErrors(404, "Channel not found")
+    }
+
+    return res
+    .status(200)
+    .json(
+        new apiResponse(200, channel[0], "Channel fetched successfully")
+    )
+})
+
+
 export {
     registerUser,
     loginUser,
@@ -323,5 +389,6 @@ export {
     currentUser,
     updateUserProfile,
     updateAvatar,
-    updateCoverImage
+    updateCoverImage,
+    getUserChannelProfile
 }
