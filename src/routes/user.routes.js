@@ -29,4 +29,4 @@ router.route("/get-user").get(verifyJWT, currentUser)
 router.route("/Update-user").patch(verifyJWT, updateUserProfile)
 router.route("/update-avatar").patch(verifyJWT, upload.single("avatar"), updateAvatar)
 
-export default router
+export default router 
