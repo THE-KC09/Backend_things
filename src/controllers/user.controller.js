@@ -1,6 +1,8 @@
 import { apiErrors } from "../utils/apiErrors.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { User } from "../models/user.model.js"
+import { Tweet } from "../models/tweet.model.js"
+import { Comment } from "../models/comment.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.service.js"
 import { apiResponse } from "../utils/apiResponse.js"
 import jwt from "jsonwebtoken"
@@ -460,6 +462,33 @@ const userTweets = asyncHandler(async(req, res)=> {
 
 })
 
+const userComment = asyncHandler(async(req, res)=> {
+    // extract the comment from the req.body:
+    const { description } = req.body
+
+    // validation: 
+    if(!description){
+        throw new apiErrors(400, "comment is required to do it")
+    }
+
+    // now creating a comment in commetSchema:
+    const newComment = await Comment.create({
+        description,
+        owner: req.user._id
+    })
+
+    // returning the response:
+
+    return res
+    .status(401)
+    .json(
+        new apiResponse(201, "your comment has been posted successfully", newComment)
+    )
+
+
+
+})
+
 
 export {
     registerUser,
@@ -473,5 +502,6 @@ export {
     updateCoverImage,
     getUserChannelProfile,
     userWatchHistory,
-    userTweets
+    userTweets,
+    userComment
 }
