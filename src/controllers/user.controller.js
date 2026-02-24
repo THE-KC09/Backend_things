@@ -427,6 +427,39 @@ const userWatchHistory = asyncHandler(async(req, res)=> { // test karna baki hai
     )
 })
 
+const userTweets = asyncHandler(async(req, res)=> {
+
+    // extracted the content from req body
+    const {content} = req.body
+
+    // validate that content is not empty
+    if (!content?.trim()){
+        throw new apiErrors(400, "content is required")
+    }
+
+    // now we create a tweet with the content user sended
+    const newTweet = await Tweet.create({
+        content,
+        owner: req.user._id  // suggestion se pata chala
+    })
+
+    // now we check that is new tweet created or not!
+    const createdTweet = await Tweet.findById(newTweet._id)
+
+    // check is there tweet exist or not
+    if (!createdTweet){
+        throw new apiErrors(500, "Something went wrong while posting tweet")
+    }
+
+    // at last we send respond 
+    return res
+    .status(201)
+    .json(
+        new apiResponse(201, "Your tweet has been succesfully uploaded", createdTweet )
+    )
+
+})
+
 
 export {
     registerUser,
@@ -439,5 +472,6 @@ export {
     updateAvatar,
     updateCoverImage,
     getUserChannelProfile,
-    userWatchHistory
+    userWatchHistory,
+    userTweets
 }
