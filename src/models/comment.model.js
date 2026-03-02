@@ -17,4 +17,5 @@ const commentSchema = new Schema(
     },
     {timestamps: true})
 
+// commentSchema.plugin(mongooseAggregatePaginate) // help for pagination in comment
 export const Comment = mongoose.model("Comment", commentSchema)

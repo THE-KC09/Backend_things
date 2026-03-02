@@ -331,7 +331,7 @@ const getUserChannelProfile = asyncHandler(async(req, res)=> {
         {
             $lookup: {
                 from: "subscriptions",
-                localfield: "_id",
+                localField: "_id",
                 foreignField: "channel",
                 as: "subscribers"
             }
@@ -360,6 +360,8 @@ const getUserChannelProfile = asyncHandler(async(req, res)=> {
                     }
                 },
             },
+        },
+        {
             $project: {
                 username: 1,
                 fullName: 1,
@@ -477,10 +479,18 @@ const userComment = asyncHandler(async(req, res)=> {
         owner: req.user._id
     })
 
+    // now we check that is new comment created or not!
+
+    const createdComment = await Comment.findById(newComment._id)
+
+    if (!createdComment) {
+        throw new apiErrors(500, "Something went wrong while creating you comment")
+    }
+
     // returning the response:
 
     return res
-    .status(401)
+    .status(201)
     .json(
         new apiResponse(201, "your comment has been posted successfully", newComment)
     )
