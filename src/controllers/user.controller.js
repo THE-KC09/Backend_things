@@ -7,6 +7,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.service.js"
 import { apiResponse } from "../utils/apiResponse.js"
 import jwt from "jsonwebtoken"
 import mongoose from "mongoose"
+import { Playlist } from "../models/playlist.model.js"
 
 const generateAccessandRefreshtoken = async (userId) => {
     try {
@@ -253,7 +254,7 @@ const updateUserProfile = asyncHandler(async(req, res)=>{
 })
 
 const currentUser = asyncHandler(async(req, res)=> {
-    console.log(req.user)
+    
     return res
     .status(200)
     .json(new apiResponse(200, "User fetched Sucessfully",  req.user))
@@ -464,6 +465,155 @@ const userTweets = asyncHandler(async(req, res)=> {
 
 })
 
+// just for testing : 
+const getUserTweets = asyncHandler(async (req, res) => {
+    // TODO: get user tweets
+    // Not able to see all the tweets till he/she logs in
+    const user = req.user
+    if (!user) {
+        throw new apiErrors(400, "User Not found!!")
+    }
+
+    const allTweets = await Tweet.find({ owner: user._id})
+
+    // const allTweets = await User.aggregate([
+    //     {
+    //         $match: {_id: user._id}
+    //     },
+    //     {
+            
+    //     },
+    //     // {
+    //     //     $lookup: {
+    //     //         from: "tweets",
+    //     //         localField: "_id",
+    //     //         foreignField: "owner",
+    //     //         as: "User_Tweets"  // it gives an array.
+    //     //     }
+    //     // },
+    //     {
+    //         $project: {
+    //             // tweets: "$User_Tweets"
+    //         }
+    //     }
+    // ])
+    return res
+    .status(200)
+    .json(
+        new apiResponse(200, "Tweets fetched successfully" , allTweets)
+    )
+
+
+
+})
+const updateUserTweets = asyncHandler(async(req, res)=>{
+    const { content, _id } = req.body
+    if (!content) {
+        throw new apiErrors(401, "the content is empty")
+    }
+    const t_id = new mongoose.Types.ObjectId(_id)
+    const tweet = await Tweet.findById(t_id)
+    if (!tweet) {
+        throw apiErrors(401, "unable to fetch the tweet")
+    }
+
+    const updatedTweet = await Tweet.findOneAndUpdate(t_id, {
+        $set: {
+            content
+        }
+    })
+
+
+    return res
+    .status(200)
+    .json(
+        new apiResponse(201, "Your tweet has been successfully updated", updatedTweet)
+    )
+
+})
+const deleteTweet = asyncHandler(async(req, res)=> {
+    // can't delete without login:
+    const { _id } = req.body
+    if (!_id) {
+        throw new apiErrors(400, "Something went wrong!!")
+    }
+    const tweet_id = new mongoose.Types.ObjectId(_id) 
+
+    await Tweet.findByIdAndDelete(tweet_id)
+    const dTweet = await Tweet.findById(tweet_id)
+    if (dTweet) {
+        throw new apiErrors(500, "Unable to delete the tweet")
+    }
+
+    return res
+    .status(200)
+    .json(
+        new apiResponse(201, "Tweet has been successfully deleted")
+    )
+})
+
+const createPlaylist = asyncHandler(async(req, res)=> {
+    const { name, description } = req.body
+    if (!name) {
+        throw new apiErrors(400, "Name is required for playlist")
+    }
+    const playlist = await Playlist.create({
+        name,
+        description : description || "",
+        owner: req.user._id
+    })
+
+    return res
+    .status(200)
+    .json(
+        new apiResponse(201, "Playlist is successfully created, Enjoy your PlayList", playlist)
+    )
+
+})
+const getUserPlaylists = asyncHandler(async(req, res)=> {
+    const allPlaylists = await Playlist.find({ owner: req.user._id})
+    if (allPlaylists.length == 0) {
+        throw new apiErrors(400, "User doesn't have any playlist")
+    }
+
+    return res
+    .status(200)
+    .json(
+        new apiResponse(201, "All playlists of user fetched successfully", allPlaylists)
+    )
+
+})
+const updatePlaylist = asyncHandler(async(req, res)=>{
+    const { name, description, _id} = req.body
+    if (!name) {
+        throw new apiErrors(401, "New name is required for update")
+    }
+    const p_id = new mongoose.Types.ObjectId(_id)
+    const updatedplaylist = await Playlist.findByIdAndUpdate(p_id, {
+        $set: {
+            name,
+            description
+        }
+    })
+
+    return res
+    .status(200)
+    .json(
+        new apiResponse(201, "playlist updated successfully", updatedplaylist)
+    )
+
+})
+const deletePlaylist = asyncHandler(async(req, res)=> {
+    const { _id } = req.body
+    const playlist_id = new mongoose.Types.ObjectId(_id)
+    await Playlist.findByIdAndDelete(playlist_id)
+    return res
+    .status(200)
+    .json(
+        new apiResponse(201, "Playlist is successfully deleted")
+    )
+})
+//
 const userComment = asyncHandler(async(req, res)=> {
     // extract the comment from the req.body:
     const { description } = req.body
@@ -513,5 +663,14 @@ export {
     getUserChannelProfile,
     userWatchHistory,
     userTweets,
-    userComment
+    userComment,
+    // for testing: 
+
+    getUserTweets,
+    updateUserTweets,
+    deleteTweet,
+    createPlaylist,
+    getUserPlaylists,
+    updatePlaylist,
+    deletePlaylist
 }

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { changeCurrentPassword, currentUser, getUserChannelProfile, loginUser, logoutUser, refreshAccessToken, registerUser, updateAvatar, updateCoverImage, updateUserProfile, userComment, userTweets, userWatchHistory } from "../controllers/user.controller.js";
+import { changeCurrentPassword, createPlaylist, currentUser, deletePlaylist, deleteTweet, getUserChannelProfile, getUserPlaylists, getUserTweets, loginUser, logoutUser, refreshAccessToken, registerUser, updateAvatar, updateCoverImage, updatePlaylist, updateUserProfile, updateUserTweets, userComment, userTweets, userWatchHistory } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js"
 
@@ -33,5 +33,25 @@ router.route("/c/:username").get(getUserChannelProfile)
 router.route("/history").get(verifyJWT, userWatchHistory)
 router.route("/tweets").post(verifyJWT, userTweets)
 router.route("/comments").post(verifyJWT, userComment)
+
+
+
+
+// for testing: 
+
+
+router.route("/get-tweets").get(verifyJWT, getUserTweets)
+router.route("/update-tweet").patch(verifyJWT, updateUserTweets)
+router.route("/delete-tweet").delete(verifyJWT, deleteTweet)
+
+router.route("/createPlaylist").post(verifyJWT, createPlaylist)
+router.route("/userplaylists").get(verifyJWT, getUserPlaylists)
+router.route("/updateplaylist").patch(verifyJWT, updatePlaylist)
+router.route("/deleteplaylist").delete(verifyJWT, deletePlaylist)
+
+
+
+
+
 
 export default router 
